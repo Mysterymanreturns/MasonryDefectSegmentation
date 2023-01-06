@@ -41,6 +41,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
     from torch.utils.data import DataLoader
     from sklearn.model_selection import train_test_split
     import pathlib
+    import time
     from albumentations.pytorch import ToTensorV2
     DATA_DIR = './test2/'
     # First check devices available (gpus or cpu), 'cuda' stands for gpus
@@ -77,7 +78,16 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             target_ID = self.targets[index]
 
             # Load input and target
-            x, y = imread(input_ID), imread(target_ID)
+            permissionerr = 1
+            while permissionerr == 1:
+                try:
+                    x, y = imread(input_ID), imread(target_ID)
+                    permissionerr = 0
+                except:
+                    permissionerr = 1
+                    print("permision error!!! retrying...")
+                    time.sleep(1)
+                
             maxinput = x.max()
             x = x/maxinput
             if y.max() != 0:
@@ -210,6 +220,9 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             total = 0            # number of examples
             running_loss = 0.0   # accumulated loss (for mean loss)
             n = 0                # number of minibatches
+            
+            
+            
             for data in dataloader_training:
                 images, masks = data
                 images, masks = images.to("cuda"), masks.to("cuda")
