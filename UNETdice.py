@@ -196,7 +196,32 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         encoder_weights=pretrain,     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,                      # model output channels (number of classes in your dataset)
-    ) 
+    )
+    
+    class SoftDiceLoss(nn.Module):
+        def __init__(self, weight=None, size_average=True):
+            super(SoftDiceLoss, self).__init__()
+
+        def forward(self, logits, targets):
+            smooth = 1
+            num = targets.size(0)
+            """
+           I am assuming the model does not have sigmoid layer in the end. if that is the case, change torch.sigmoid(logits) to simply logits
+            """
+            probs = torch.sigmoid(logits)
+            m1 = probs.view(num, -1)
+            m2 = targets.view(num, -1)
+            intersection = (m1 * m2)
+
+            score = 2. * (intersection.sum(1) + smooth) / (m1.sum(1) + m2.sum(1) + smooth)
+            score = 1 - score.sum() / num
+            return score
+
+    
+    
+    
+    
+    
     net.to("cuda")
     def train():
 
@@ -235,7 +260,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         optimizer = torch.optim.Adam(net.parameters(), lr=0.0005, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss().to("cuda")
+        criterion = nn.SoftDiceLoss().to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples

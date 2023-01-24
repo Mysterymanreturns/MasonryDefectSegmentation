@@ -1,3 +1,30 @@
+# INPUTS
+# fileloc = location of point cloud
+# saveloc = folder for outputs
+# mask = denotes whether file is a mask image. mask = 1 skips rasterisation step and resizes to match image dimensions.
+# res = multiplier on resolution of rasterised point cloud imagedimension = defaultdimension*res
+# dim = if given, resulting image is cropped into dimxdim images and put into relevant mask or image folder ready for network training. 
+
+# INPUT FILES
+# if mask = 0, pointcloud or .tiff format image at location: fileloc
+# if mask = 1, mask at location: saveloc+"mask.tiff" 
+# if mask = 1, image at location: saveloc+ "raster.tiff"
+
+# OUTPUTS
+# noim = number of images created
+
+# OUTPUT FILES
+# if mask = 0 and input is point cloud, rastered image at location: saveloc+ "raster.tiff"
+# if mask = 0 and input is an image, rastered image at location: saveloc+ "raster.tiff"
+# if mask = 1, resized mask at location: saveloc+"mask.tiff"
+# if dim exists and mask = 0, new folder (if not exists): 'croppedimages/'
+# if dim exists and mask = 1, new folder (if not exists): 'croppedmasks/'
+# if dim exists and mask = 0, numbered image crops of size dimxdim at location: saveloc+croppedimages/+ str(i) +".tiff"
+# if dim exists and mask = 1, numbered mask crops of size dimxdim at location: saveloc+croppedmasks/+ str(i) +".tiff"
+
+
+#OUTPUT FILES
+
 def raster(fileloc,saveloc,mask = 0,res = 1, dim = None):
     
     

@@ -23,7 +23,7 @@
 # output of network on testimage after sigmoid function at location: test+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetag)
 
 
-def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, testmask, savetag):
+def runcustom1(inno, savestate, type1, network, test, encoder, dim, testimage, testmask, savetag):
 
     import numpy as np
     import torch
@@ -44,13 +44,8 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
     import torch.nn.functional as F
     from albumentations.pytorch import ToTensorV2    
     import segmentation_models_pytorch as smp
-
-    Net = getattr(smp, network)(
-        encoder_name= encoder,        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
- #   encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
-        in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-        classes=1,                      # model output channels (number of classes in your dataset)
-        ) 
+    from customnet1 import customnet1
+    Net = customnet1()
 
     d = torch.load(test+"/results/"+savestate)
     Net.load_state_dict(d["state_dict"])

@@ -20,11 +20,11 @@
 # recall = recall score for test image
 #nepochsf = number of epochs used for training (note: number is appended to name of trained network)
 
-def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
+def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
 
     import os
     import sys
-    from RUN import UNETrun
+    from RUNcustom1 import runcustom1
   #  path1 = 'C:/Users/eejmws/OneDrive - University of Leeds/Pytorch/'
   #  path2 = 'C:/Users/jackm/OneDrive - University of Leeds/Pytorch/'
 
@@ -63,6 +63,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
     from sklearn.model_selection import train_test_split
     import pathlib
     import time
+    from customnet1 import customnet1
     from albumentations.pytorch import ToTensorV2
     DATA_DIR = './test2/'
     # First check devices available (gpus or cpu), 'cuda' stands for gpus
@@ -191,19 +192,23 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
     dataloader_validation = DataLoader(dataset=dataset_valid,
                                        batch_size=batch,
                                        shuffle=True)
-    net = getattr(smp, network)(
-        encoder_name= encoder,        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-        encoder_weights=pretrain,     # use `imagenet` pre-trained weights for encoder initialization
-        in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-        classes=1,                      # model output channels (number of classes in your dataset)
-    ) 
+
+    
+    
+    # Some imports first
+
+    # New models are defined as classes. Then, when we want to create a model we create an object instantiating this class.
+    
+
+
+    net = customnet1()
     net.to("cuda")
     def train():
 
 
         def stats(loader, net):
 
-            loss_fn = nn.CrossEntropyLoss()
+            loss_fn = nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
             correct = 0
             total = 0
             running_loss = 0
@@ -230,9 +235,9 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         #results_path = './results_UNET_mobilenet_RGB200.pt'
         statsrec = np.zeros((2,nepochs))
 
-        loss_fn = nn.CrossEntropyLoss()
+       # loss_fn = nn.CrossEntropyLoss()
         #optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.01)
-        optimizer = torch.optim.Adam(net.parameters(), lr=0.0005, eps=1e-08,  weight_decay=0.00001)
+        optimizer = torch.optim.Adam(net.parameters(), lr=3e-5, eps=1e-08,  weight_decay=0.00001)
 
 
         criterion = nn.BCEWithLogitsLoss().to("cuda")
@@ -290,9 +295,9 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             #print(statsrec.type())
             statsrec[:,epoch] = (ltrn, ltst)
             
-            if epoch >= 10:
-                if 0.85*ltst >= ltrn:
-                    break
+           # if epoch >= 10:
+           #     if 0.85*ltst >= ltrn:
+           #         break
             
         # save network parameters, losses and accuracy
         savestate = '/Final_epoch_{}{}{}.pt'.format(nepochsf, network, encoder)
@@ -300,7 +305,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         saveplace = results_path+savestate
         torch.save({"state_dict": net.state_dict(), "stats": statsrec}, saveplace)
         if test == 1:    
-               iou_score, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test.tiff","/testmask.tiff", "default")
+               iou_score, precision,recall = runcustom1(inno, savestate, "depth", network, path, encoder, dim, "/test.tiff","/testmask.tiff", "default")
         else:
                iou_score, precision,recall = [0,0,0]
         return iou_score, precision,recall, nepochsf

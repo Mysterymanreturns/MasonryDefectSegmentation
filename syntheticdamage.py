@@ -1,3 +1,15 @@
+#INPUTS
+
+#wall = image to be augmented in numpy format
+#mask = mask in numpy format (used to determine joint locations)
+#damagelevel = value between 0 and 1 denoting the extent of spalling
+
+#OUTPUTS
+
+#spalledwall = wall image augmented with added spalling
+#spallingmask = binary mask of added spalling areas
+
+
 def syntheticspall(wall,mask,damagelevel):  
     
     from PIL import Image
@@ -100,9 +112,7 @@ def syntheticspall(wall,mask,damagelevel):
     # characterise wall
     spalledwall = wall
     wall2 = wall
-    #dtransformwall = ndimage.distance_transform_edt(wall2)
-    #labeledwall = segmentation.watershed(dtransformwall, watershed_line=True)
- #   noblocks = labeledwall.max()
+    spallingmask = wall*0
     out=cv.connectedComponents(1-mask.astype("uint8"))
     labeledwall = out[1]
     noblocks = out[0]
@@ -222,12 +232,22 @@ def syntheticspall(wall,mask,damagelevel):
                 defectlength = defect.shape[0]
                 defectheight = defect.shape[1]
                 spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = np.maximum(defect,spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart])
+                spallingmask[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = defect
                 
     print('damage added')
-   #spallingmask = spalledwall>0
-    return spalledwall#,spallingmask
+    spallingmask = spallingmask>0
+    return spalledwall,spallingmask
 
+#INPUTS
 
+#wall = image to be augmented in numpy format
+#mask = mask in numpy format (used to determine joint locations)
+#damagelevel = value between 0 and 1 denoting the extent of spalling
+
+#OUTPUTS
+
+#spalledwall = wall image augmented with added efflorescence
+#spallingmask = binary mask of added efflorescence areas
 
 def syntheticflor(wall,mask,damagelevel):  
     
@@ -247,6 +267,7 @@ def syntheticflor(wall,mask,damagelevel):
     from scipy import ndimage
     from skimage import segmentation
     import random
+    from addnoise import addperlin3
 
     bernstein = lambda n, k, t: binom(n,k)* t**k * (1.-t)**(n-k)
 
@@ -329,11 +350,11 @@ def syntheticflor(wall,mask,damagelevel):
 
 
     # characterise wall
-    spalledwall = wall
+    florwall = wall
     wall2 = wall
+    flormask = wall*0
     
-    
-    for n2 in range(random.randint(0, int(5*damagelevel))):
+    for n2 in range(random.randint(0, int(25*damagelevel))):
                 
                 #random depression spalling
         
@@ -364,19 +385,19 @@ def syntheticflor(wall,mask,damagelevel):
                 spall = spallD*100/(max(1,spallD.max())*random.randint(50, 200))
 
                 
-                spalllength = int(wall.shape[0]*10/random.randint(10, 200))
-                spallheight = int(wall.shape[1]*10/random.randint(10, 200))
+                spalllength = int(wall.shape[0]*10/random.randint(10, 150))
+                spallheight = int(wall.shape[1]*10/random.randint(10, 150))
                 spallC = cv.resize(spall,(spallheight,spalllength))
                 spall = spallC
                 
                 efflor = spall*0
                 efflor = addperlin3(efflor,10/random.randint(5, 100))
-                spall = spall*efflor
+                spall = spall*efflor*2
                                 
                 spalllength = spall.shape[0]
                 spallheight = spall.shape[1]
-                locx = -spalllength+random.randint(0, blocklength+2*spalllength)
-                locy = -spallheight+random.randint(0, blockheight+2*spallheight)
+                locx = -spalllength+random.randint(0, wall.shape[0]+2*spalllength)
+                locy = -spallheight+random.randint(0, wall.shape[1]+2*spallheight)
                 overlapxstart=max(0,-locx)
                 overlapxend=max(0,locx+spalllength-wall.shape[0])
                 overlapystart=max(0,-locy)
@@ -387,135 +408,8 @@ def syntheticflor(wall,mask,damagelevel):
                # defect = cv.GaussianBlur(defect,(5,5),0)
                 defectlength = defect.shape[0]
                 defectheight = defect.shape[1]
-                #spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = np.maximum(defect,spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart])
-                spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart]-defect
-    
-    
-    
-    
-    
-    
-    
-    #dtransformwall = ndimage.distance_transform_edt(wall2)
-    #labeledwall = segmentation.watershed(dtransformwall, watershed_line=True)
- #   noblocks = labeledwall.max()
-   # out=cv.connectedComponents(1-mask.astype("uint8"))
-   # labeledwall = out[1]
-   # noblocks = out[0]
-    
-    
-    #random transforms in each block
-#     for n1 in range(noblocks-1):
-#        # n1=n1
-#         #print(n1)
-#         block = (labeledwall==n1)
-#         block.astype("int")
-        
-#         blockindex = np.transpose(np.nonzero(block))
-#         blockxstart=blockindex[:,0].min()
-#         blockxend=blockindex[:,0].max()
-#         blockystart=blockindex[:,1].min()
-#         blockyend=blockindex[:,1].max()
-#         blocklength = blockxend-blockxstart
-#         blockheight = blockyend-blockystart 
-#         thisblock = block[blockxstart:blockxend,blockystart:blockyend]
-        
-#         if  (random.random() < damagelevel)==1:
-#             for n2 in range(random.randint(0, int(25*damagelevel))):
-                
-#                 #random depression spalling
-        
-#                 rad = random.random()
-#                 edgy = random.random()*10
-#                 npoints = random.randint(3,15)
-#                 for c in np.array([[0,0]]):
-
-#                     a = get_random_points(npoints, scale=1) + c
-#                     x,y, _ = get_bezier_curve(a,rad=rad, edgy=edgy)
-
-
-#                 x=(x*100).astype(int)
-#                 y=(y*100).astype(int)
-#                # plt.plot(x,y)
-
-#                 spall = np.zeros((105,105))
-
-#                 for n in range(len(x)):
-#                   a = min(x[n]+3,102)
-#                   b = min(y[n]+3,102)
-#                   spall[a,b]=1
-
-#                 spall=spall.astype(int)
-#                 cv.floodFill(spall, None, (0,0),1)
-#                 spall=1-spall
-#                 spallD = ndimage.distance_transform_edt(spall)
-#                 spall = spallD*100/(max(1,spallD.max())*random.randint(50, 200))
-                
-                #if  (random.random() < damagelevel)==1:
-                
-                #extra flat spalling
-#                 for n3 in range(random.randint(0, 10)):
-#                     rad = random.random()
-#                     edgy = random.random()*10
-#                     npoints = random.randint(3,15)
-
-#                     for c2 in np.array([[0,0]]):
-
-#                         a2 = get_random_points(npoints, scale=1) + c2
-#                         x2,y2, _ = get_bezier_curve(a2,rad=rad, edgy=edgy)
-
-
-#                     x2=(x2*100).astype(int)
-#                     y2=(y2*100).astype(int)
-#                    # plt.plot(x,y)
-
-#                     spallflat = np.zeros((105,105))
-
-#                     for n4 in range(len(x2)):
-#                       a2 = min(x2[n4]+3,102)
-#                       b2 = min(y2[n4]+3,102)
-#                       spallflat[a2,b2]=1
-
-#                     spallflat=spallflat.astype(int)
-#                     cv.floodFill(spallflat, None, (0,0),1)
-#                     #spallflat = np.array(spallflat)
-#                     spallflat = 1-spallflat
-#                     spallflat = spallflat.astype("uint8")
-#                     spallflatsize =  int(100/random.randint(2, 20))
-                    
-#                     spallflatC = cv.resize(spallflat,(spallflatsize,spallflatsize))
-#                     spallflat = spallflatC
-                    
-#                     flatlocx = random.randint(0, 100-spallflatsize)
-#                     flatlocy = random.randint(0, 100-spallflatsize)
-#                     spallflatintensity =spall[flatlocx+int(spallflatsize/2),flatlocy+int(spallflatsize/2)]
-#                     spallflat = spallflat*spallflatintensity
-
-                    
-#                     spall[flatlocx:flatlocx+spallflatsize,flatlocy:flatlocy+spallflatsize] = np.where(spallflat>0,spallflat,spall[flatlocx:flatlocx+spallflatsize,flatlocy:flatlocy+spallflatsize])
-                    
-
-                
-#                 spalllength = int(blocklength*100/random.randint(25, 600))
-#                 spallheight = int(blockheight*100/random.randint(25, 600))
-#                 spallC = cv.resize(spall,(spallheight,spalllength))
-#                 spall = spallC
-#                 spalllength = spall.shape[0]
-#                 spallheight = spall.shape[1]
-#                 locx = blockxstart-spalllength+random.randint(0, blocklength+2*spalllength)
-#                 locy =blockystart-spallheight+random.randint(0, blockheight+2*spallheight)
-#                 overlapxstart=max(0,blockxstart-locx)
-#                 overlapxend=max(0,locx+spalllength-blockxend)
-#                 overlapystart=max(0,blockystart-locy)
-#                 overlapyend=max(0,locy+spallheight-blockyend)
-                
-#                 defect = spall[overlapxstart:max(0,spalllength-overlapxend),overlapystart:max(0,spallheight-overlapyend)]
-#                 #defect = defect.astype("float32")
-#                # defect = cv.GaussianBlur(defect,(5,5),0)
-#                 defectlength = defect.shape[0]
-#                 defectheight = defect.shape[1]
-#                 spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = np.maximum(defect,spalledwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart])
-                
+                florwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = florwall[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart]-defect
+                flormask[locx+overlapxstart:locx+overlapxstart+defectlength,locy+overlapystart:locy+defectheight+overlapystart] = defect
+    flormask = flormask>0            
     print('floresced')
-   #spallingmask = spalledwall>0
-    return spalledwall#,spallingmask
+    return florwall,flormask

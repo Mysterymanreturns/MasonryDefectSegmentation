@@ -1,3 +1,17 @@
+#syntheticwall = creates a synthetic masonry wall with random block dimensions and geometry
+
+#INPUTS
+#dimheight
+#dimwidth
+#blockheight
+#blockwidth
+#saveloc
+
+#OUTPUTS
+#wall
+#mask
+
+
 def syntheticwall(dimheight,dimwidth,blockheight,blockwidth,saveloc):
     import random
     import os, sys
