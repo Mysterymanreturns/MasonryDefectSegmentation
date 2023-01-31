@@ -235,7 +235,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         optimizer = torch.optim.Adam(net.parameters(), lr=0.001, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss(pos_weight=10*torch.ones([1])).to("cuda")
+        criterion = nn.BCEWithLogitsLoss(pos_weight=7*torch.ones([1])).to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples
@@ -252,8 +252,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
                 optimizer.zero_grad()
 
                 # Forward, backward, and update parameters
-                outputs1 = net(images)
-                outputs = net(outputs1)
+                outputs = net(images)
                 loss = criterion(outputs, masks)
                 loss.backward()
                 optimizer.step()
@@ -291,9 +290,9 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             #print(statsrec.type())
             statsrec[:,epoch] = (ltrn, ltst)
             
-          #  if epoch >= 10:
-          #      if 0.85*ltst >= ltrn:
-          #          break
+            if epoch >= 30:
+                if 0.80*ltst >= ltrn:
+                   break
             
         # save network parameters, losses and accuracy
         savestate = '/Final_epoch_{}{}{}.pt'.format(nepochsf, network, encoder)
@@ -301,14 +300,18 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         saveplace = results_path+savestate
         torch.save({"state_dict": net.state_dict(), "stats": statsrec}, saveplace)
         if test == 1:    
-               iou_score, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test.tiff","/testmask.tiff", "default")
+                iou_score2, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test2.tiff","/testmask2.tiff", "default")
+               # iou_scoresynthetic, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.tiff", "default")
+                iou_scoresynthetic = iou_score2
+                iou_score, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test.tiff","/testmask.tiff", "default")
         else:
-               iou_score, precision,recall = [0,0,0]
-        return iou_score, precision,recall, nepochsf
+            iou_score, iou_score2, iou_scoresynthetic, precision, recall = [0,0,0]
+            
+        return iou_score, iou_score2, iou_scoresynthetic, precision,recall, nepochsf
     
     
     #if __name__ == '__main__':
-    iou_score, precision, recall,nepochsf = train()
+    iou_score, iou_score2, iou_scoresynthetic, precision, recall,nepochsf = train()
     torch.cuda.empty_cache()
  #   torch.save({"state_dict" : net.state_dict()}, results_path)
-    return iou_score,precision,recall, nepochsf
+    return iou_score,precision,recall, nepochsf, iou_score2, iou_scoresynthetic

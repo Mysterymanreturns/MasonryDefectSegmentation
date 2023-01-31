@@ -135,6 +135,8 @@ def raster(fileloc,saveloc,mask = 0,res = 1, dim = None):
         outputf.save(saveloc+"mask.tiff")
     elif mask == 0 and "tiff" in fileloc:
         outputf = Image.open(fileloc)
+        nx,ny = outputf.size
+        outputf = outputf.resize((int(nx*res),int(ny*res)))
         outputf.save(saveloc+"raster.tiff")        
     noim = 0
     if dim != None:
@@ -144,8 +146,12 @@ def raster(fileloc,saveloc,mask = 0,res = 1, dim = None):
                 newpath = r'croppedmasks/'
             if not os.path.exists(saveloc+newpath):
                 os.makedirs(saveloc+newpath)
-            pic = outputf
+           # pic = outputf
+            if "tiff" in fileloc:
+                 nx,ny = outputf.size
+                 outputf = outputf.resize((int(nx*res),int(ny*res)))
             #pic = ImageOps.grayscale(pic)
+            pic = outputf
             w = pic.size[0]
             nx = int(w/dim)
             h = pic.size[1]
