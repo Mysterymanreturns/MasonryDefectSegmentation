@@ -108,7 +108,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
                     permissionerr = 1
                     print("permision error!!! retrying...")
                     time.sleep(1)
-                
+            (x-x.mean())/np.std(x)    
             maxinput = x.max()
             x = x/maxinput
             if y.max() != 0:
@@ -203,7 +203,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
 
         def stats(loader, net):
 
-            loss_fn = nn.CrossEntropyLoss()
+            #loss_fn = nn.CrossEntropyLoss()
             correct = 0
             total = 0
             running_loss = 0
@@ -230,12 +230,12 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         #results_path = './results_UNET_mobilenet_RGB200.pt'
         statsrec = np.zeros((2,nepochs))
 
-        loss_fn = nn.CrossEntropyLoss()
+       # loss_fn = nn.CrossEntropyLoss()
         #optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.01)
-        optimizer = torch.optim.Adam(net.parameters(), lr=0.0005, eps=1e-08,  weight_decay=0.00001)
+        optimizer = torch.optim.Adam(net.parameters(), lr=0.001, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss().to("cuda")
+        criterion = nn.BCEWithLogitsLoss(pos_weight=10*torch.ones([1])).to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples
@@ -252,7 +252,8 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
                 optimizer.zero_grad()
 
                 # Forward, backward, and update parameters
-                outputs = net(images)
+                outputs1 = net(images)
+                outputs = net(outputs1)
                 loss = criterion(outputs, masks)
                 loss.backward()
                 optimizer.step()
@@ -290,9 +291,9 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             #print(statsrec.type())
             statsrec[:,epoch] = (ltrn, ltst)
             
-            if epoch >= 10:
-                if 0.85*ltst >= ltrn:
-                    break
+          #  if epoch >= 10:
+          #      if 0.85*ltst >= ltrn:
+          #          break
             
         # save network parameters, losses and accuracy
         savestate = '/Final_epoch_{}{}{}.pt'.format(nepochsf, network, encoder)

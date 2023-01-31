@@ -151,7 +151,7 @@ def runcustom1(inno, savestate, type1, network, test, encoder, dim, testimage, t
           with torch.no_grad():
          
                   imagepre = np.array(region)
-
+                  (imagepre-imagepre.mean())/np.std(imagepre)
                   image = imagepre#.astype(np.uint8)
 
                   transformed = transform1(image=image)
@@ -264,7 +264,7 @@ def runcustom1(inno, savestate, type1, network, test, encoder, dim, testimage, t
           with torch.no_grad():
          
                   imagepre = np.array(region)
-
+                  (imagepre-imagepre.mean())/np.std(imagepre)
                   image = imagepre#.astype(np.uint8)
 
                   transformed = transform1(image=image)
@@ -362,7 +362,7 @@ def runcustom1(inno, savestate, type1, network, test, encoder, dim, testimage, t
           with torch.no_grad():
          
                   imagepre = np.array(region)
-
+                  (imagepre-imagepre.mean())/np.std(imagepre)
                   image = imagepre#.astype(np.uint8)
 
                   transformed = transform1(image=image)

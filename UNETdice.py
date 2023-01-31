@@ -255,12 +255,12 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         #results_path = './results_UNET_mobilenet_RGB200.pt'
         statsrec = np.zeros((2,nepochs))
 
-        loss_fn = nn.CrossEntropyLoss()
+        loss_fn = SoftDiceLoss()
         #optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.01)
-        optimizer = torch.optim.Adam(net.parameters(), lr=0.0005, eps=1e-08,  weight_decay=0.00001)
+        optimizer = torch.optim.Adam(net.parameters(), lr=0.0004, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.SoftDiceLoss().to("cuda")
+        criterion = SoftDiceLoss().to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples

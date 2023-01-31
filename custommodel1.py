@@ -63,7 +63,7 @@ def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, d
     from sklearn.model_selection import train_test_split
     import pathlib
     import time
-    from customnet1 import customnet1
+    from customnet1 import customnet1, customnet2
     from albumentations.pytorch import ToTensorV2
     DATA_DIR = './test2/'
     # First check devices available (gpus or cpu), 'cuda' stands for gpus
@@ -122,7 +122,7 @@ def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, d
                 y = transformed1['mask']
             transformed = trans(image=x, mask=y)
             x = transformed['image']
-            x=x*maxinput
+            #x=x*maxinput
             y = transformed['mask']
             y = torch.unsqueeze(y,0)
             y= y.float()
@@ -199,7 +199,26 @@ def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, d
 
     # New models are defined as classes. Then, when we want to create a model we create an object instantiating this class.
     
+    class SoftDiceLoss(nn.Module):
+        def __init__(self, weight=None, size_average=True):
+            super(SoftDiceLoss, self).__init__()
 
+        def forward(self, logits, targets):
+            smooth = 1
+            num = targets.size(0)
+            """
+           I am assuming the model does not have sigmoid layer in the end. if that is the case, change torch.sigmoid(logits) to simply logits
+            """
+            probs = torch.sigmoid(logits)
+            m1 = probs.view(num, -1)
+            m2 = targets.view(num, -1)
+            intersection = (m1 * m2)
+
+            score = 2. * (intersection.sum(1) + smooth) / (m1.sum(1) + m2.sum(1) + smooth)
+            score = 1 - score.sum() / num
+            return score
+
+    
 
     net = customnet1()
     net.to("cuda")
@@ -208,7 +227,7 @@ def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, d
 
         def stats(loader, net):
 
-            loss_fn = nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
+            loss_fn = nn.BCEWithLogitsLoss(pos_weight=10*torch.ones([1]))#SoftDiceLoss()#nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
             correct = 0
             total = 0
             running_loss = 0
@@ -236,11 +255,11 @@ def custommodel1(test, inno, batch, path, nepochs, network, encoder, pretrain, d
         statsrec = np.zeros((2,nepochs))
 
        # loss_fn = nn.CrossEntropyLoss()
-        #optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.01)
-        optimizer = torch.optim.Adam(net.parameters(), lr=3e-5, eps=1e-08,  weight_decay=0.00001)
+        #optimizer = optim.SGD(net.parameters(), lr=0.0002, momentum=0.01)
+        optimizer = torch.optim.Adam(net.parameters(), lr=5e-6, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss().to("cuda")
+        criterion = SoftDiceLoss().to("cuda")#nn.BCEWithLogitsLoss().to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples
