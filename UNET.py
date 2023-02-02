@@ -1,24 +1,25 @@
 # INPUTS
-#test = path to data folder
-#inno = number of input channels
-#batch = number of batches
-#path = path to datafolder
-#nepochs = max number of training epochs (note: training is set to end once training IOU is 15% less than test IOU)
-#network = type of network eg. Unet
-#encoder = name of encoder eg. mobilenet_v2
-#pretrain = dataset for pretraining weights subject to availability on the segmentation pytorch toolbox. eg. imagenet
-#dim = dimension of image crops used in network. Images will be square. eg. dim = 512 will mean 512x512 patches.
-#transparams = data augmentation (albumentations) to use for training
-#transparams = data augmentation (albumentations) to use for validation
+# test = path to data folder
+# inno = number of input channels
+# batch = number of batches
+# path = path to datafolder
+# nepochs = max number of training epochs (note: training is set to end once training IOU is 15% less than test IOU)
+# network = type of network eg. Unet
+# encoder = name of encoder eg. mobilenet_v2
+# pretrain = dataset for pretraining weights subject to availability on the segmentation pytorch toolbox. eg. imagenet
+# dim = dimension of image crops used in network. Images will be square. eg. dim = 512 will mean 512x512 patches.
+# transparams = data augmentation (albumentations) to use for training
+# transparams = data augmentation (albumentations) to use for validation
 
 # INPUT FILES
-# 
+# Images in folder path+"croppedimages/"
+# masks in folder path+"croppedmasks/"
 
-#OUTPUTS
+# OUTPUTS
 # iou_score = Intersection over union score for test image
 # precision = precisions score for test image
 # recall = recall score for test image
-#nepochsf = number of epochs used for training (note: number is appended to name of trained network)
+# nepochsf = number of epochs used for training (note: number is appended to name of trained network)
 
 def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
 
@@ -75,7 +76,6 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
     trans = A.Compose([
             ToTensorV2()])
     class MasonryDataset(BaseDataset):
-
         CLASSES = ['masonry', 'mortar']
 
         def __init__(self,
