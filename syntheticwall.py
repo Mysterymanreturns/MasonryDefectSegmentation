@@ -20,6 +20,7 @@ def syntheticwall(dimheight,dimwidth,blockheight,blockwidth,saveloc):
     import scipy.stats as stats
     import math
     from PIL import Image, ImageOps
+    import noise
     
    # dist = picnp[18:30,10]
     mean = 614400#dist.mean()
@@ -40,7 +41,7 @@ def syntheticwall(dimheight,dimwidth,blockheight,blockwidth,saveloc):
     verticaljointoffsetdownwards = random.randint(int(blockwidth/4),int(3*blockwidth/4))
     jointcropsize = testcrop.shape
     jointcropwidth = jointcropsize[0]
-    jointcroplength = 1 #jointcropsize[1]
+    jointcroplength = 1   #jointcropsize[1]
     wallsize = wall.shape
     wallheight = wallsize[0]
     walllength = wallsize[1]
@@ -49,7 +50,7 @@ def syntheticwall(dimheight,dimwidth,blockheight,blockwidth,saveloc):
     nhjoints = int(wallheight/vspacing)
 
     hjoints = np.zeros([wallheight])#jointcroplength])
-    startpoint =  round(vspacing/2)
+    startpoint = round(vspacing/2)
     for n in range(nhjoints):
       location = n*vspacing+ startpoint
       start = max(location-int(jointcropwidth/2),0)
