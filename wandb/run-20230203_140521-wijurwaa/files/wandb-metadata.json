@@ -1,0 +1,49 @@
+{
+    "os": "Windows-10-10.0.18363-SP0",
+    "python": "3.9.15",
+    "heartbeatAt": "2023-02-03T14:05:24.228646",
+    "startedAt": "2023-02-03T14:05:21.914819",
+    "docker": null,
+    "cuda": null,
+    "args": null,
+    "state": "running",
+    "program": "Users/eejmws/OneDrive - University of Leeds/Pytorch/codebase/synth_vs_real.ipynb",
+    "root": "C:/Users/eejmws/OneDrive - University of Leeds/Pytorch/codebase",
+    "git": {
+        "remote": "git@github.com:Mysterymanreturns/MasonryDefectSegmentation.git",
+        "commit": "9d56cbb12d375be34d7fd3f30a262fdafe7dd86a"
+    },
+    "email": "eejmws@leeds.ac.uk",
+    "host": "UOL-LAP-595153",
+    "username": "eejmws",
+    "executable": "C:\\Users\\eejmws\\Anaconda3\\envs\\clone1\\python.exe",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 2592.0,
+        "min": 0.0,
+        "max": 2592.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2592.0,
+            "min": 0.0,
+            "max": 2592.0
+        }
+    ],
+    "disk": {
+        "total": 952.9501914978027,
+        "used": 304.0902442932129
+    },
+    "gpu": "Quadro P620",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "Quadro P620",
+            "memory_total": 4294967296
+        }
+    ],
+    "memory": {
+        "total": 31.642425537109375
+    }
+}

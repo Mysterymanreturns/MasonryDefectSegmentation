@@ -21,11 +21,30 @@
 # recall = recall score for test image
 # nepochsf = number of epochs used for training (note: number is appended to name of trained network)
 
-def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
+def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
 
     import os
     import sys
     from RUN import UNETrun
+    import wandb
+    run = wandb.init(
+    project="test1",
+    name=runname,
+    config={
+    "proportion of wall 1 data": wall1prop,
+    "proportion of wall 2 data": wall2prop,
+    "proportion of synthetic data": synthprop,
+    "number of channels": inno,
+    "network architecture": network,  
+    "encoder": encoder,
+    "pretrain": pretrain,
+    "image dimension (square)": dim,    
+    })
+    type1 = "depth"
+    savetag = "wall1"
+    savetag2 = "wall2"
+    savetagsynthetic = "syntheticwall"
+
   #  path1 = 'C:/Users/eejmws/OneDrive - University of Leeds/Pytorch/'
   #  path2 = 'C:/Users/jackm/OneDrive - University of Leeds/Pytorch/'
 
@@ -235,7 +254,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         optimizer = torch.optim.Adam(net.parameters(), lr=0.001, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss(pos_weight=7*torch.ones([1])).to("cuda")
+        criterion = nn.BCEWithLogitsLoss(pos_weight=3*torch.ones([1])).to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples
@@ -270,7 +289,7 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
             ltrn = running_loss/n
          #   atrn = correct/total 
             ltst = stats(dataloader_validation, net)
-
+            wandb.log({'training loss': ltrn, 'validation loss': ltst, 'epoch number': epoch})
 
 
             print(f"epoch: {epoch} training loss: {ltrn: .3f}   test loss: {ltst: .3f} ")
@@ -299,19 +318,49 @@ def unet(test, inno, batch, path, nepochs, network, encoder, pretrain, dim,trans
         print(savestate)
         saveplace = results_path+savestate
         torch.save({"state_dict": net.state_dict(), "stats": statsrec}, saveplace)
+
         if test == 1:    
-                iou_score2, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test2.tiff","/testmask2.tiff", "default")
+                iou_score2, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test2.tiff","/testmask2.tiff", savetag2)
                # iou_scoresynthetic, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.tiff", "default")
-                iou_scoresynthetic = iou_score2
-                iou_score, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/test.tiff","/testmask.tiff", "default")
+                iou_scoresynthetic, precision, recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.png", savetagsynthetic)
+
+                iou_score, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test.tiff","/testmask.tiff", savetag)
+                
+                testimg = Image.open(path+"test.tiff")
+                testmask = Image.open(path+"test.tiff")
+                outputimg = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetag))
+          
+                wandb.log({"testimage wall1": wandb.Image(np.array(testimg))})
+                wandb.log({"testmask wall1": wandb.Image(np.array(testmask))})
+                wandb.log({"outputimage wall1": wandb.Image(np.array(outputimg))})
+                
+                testimg2 = Image.open(path+"test2.tiff")
+                testmask2 = Image.open(path+"testmask2.tiff")
+                outputimg2 = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetag2))
+
+                wandb.log({"testimage wall2": wandb.Image(np.array(testimg2))})
+                wandb.log({"testmask wall2": wandb.Image(np.array(testmask2))})
+                wandb.log({"outputimage wall2": wandb.Image(np.array(outputimg2))})
+                
+                testimgsynth = Image.open(path+"testsynth.tiff")
+                testmasksynth = Image.open(path+"testmasksynth.png")
+                outputimgsynth = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetagsynthetic))
+
+                wandb.log({"testimage syntheticwall": wandb.Image(np.array(testimgsynth))})
+                wandb.log({"testmask syntheticwall": wandb.Image(np.array(testmasksynth))})
+                wandb.log({"outputimage syntheticwall": wandb.Image(np.array(outputimgsynth))})                
+
+                
+                wandb.log({'test IOU wall1': iou_score, 'test IOU wall 2': iou_score2, 'test IOU synthetic wall': iou_scoresynthetic})
         else:
             iou_score, iou_score2, iou_scoresynthetic, precision, recall = [0,0,0]
             
         return iou_score, iou_score2, iou_scoresynthetic, precision,recall, nepochsf
     
-    
+        
     #if __name__ == '__main__':
     iou_score, iou_score2, iou_scoresynthetic, precision, recall,nepochsf = train()
+    run.finish()
     torch.cuda.empty_cache()
  #   torch.save({"state_dict" : net.state_dict()}, results_path)
     return iou_score,precision,recall, nepochsf, iou_score2, iou_scoresynthetic

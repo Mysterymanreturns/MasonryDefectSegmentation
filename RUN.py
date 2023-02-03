@@ -90,9 +90,19 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
            # A.Resize(size,size),
             ToTensorV2(),
             ])    
-   
-    for x in range(0, nx+1):
-        for y in range(0,ny+1):
+    offset = 0
+    if nx == (w-offset)/dim:
+        nxend = nx
+    else:
+        nxend = nx+1
+
+    if ny == (h-offset)/dim:
+        nyend = ny
+    else:
+        nyend = ny+1
+        
+    for x in range(0, nxend):
+        for y in range(0,nyend):
           left = int(x*dim)
           bottom = int(y*dim)
           right =int(dim*(1+x))
@@ -202,9 +212,19 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
 
     nx2 = int((w-offset)/dim)
     ny2 = int((h-offset)/dim)
+    
+    if nx2 == (w-offset)/dim:
+        nxend2 = nx2
+    else:
+        nxend2 = nx2+1
 
-    for x in range(0, nx2+1):
-        for y in range(0,ny2+1):
+    if ny2 == (h-offset)/dim:
+        nyend2 = ny2
+    else:
+        nyend2 = ny2+1
+
+    for x in range(0, nxend2):
+        for y in range(0,nyend2):
 
           left = int(x*dim+offset)
           bottom = int(y*dim+offset)
@@ -300,9 +320,20 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
     size = 256
     nx3 = int((w-offset)/dim)
     ny3 = int((h-offset)/dim)
+    
+    if nx3 == (w-offset)/dim:
+        nxend3 = nx3
+    else:
+        nxend3 = nx3+1
 
-    for x in range(0, nx3+1):
-        for y in range(0,ny3+1):
+    if ny3 == (h-offset)/dim:
+        nyend3 = ny3
+    else:
+        nyend3 = ny3+1
+
+    
+    for x in range(0, nxend3):
+        for y in range(0,nyend3):
 
           left = int(x*dim+offset)
           bottom = int(y*dim+offset)

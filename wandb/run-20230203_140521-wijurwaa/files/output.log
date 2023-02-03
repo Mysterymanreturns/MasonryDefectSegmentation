@@ -1,0 +1,50 @@
+[0]
+X
+Y
+Z
+intensity
+return_number
+number_of_returns
+scan_direction_flag
+edge_of_flight_line
+classification
+synthetic
+key_point
+withheld
+scan_angle_rank
+user_data
+point_source_id
+red
+green
+blue
+Normal_change_rate__0_01_
+Normal_change_rate__0_1_
+Roughness__0_1_
+Roughness__0_005786_
+DefectDepth
+ArcDist
+Int
+LocalZ
+Offset
+Chainage
+Coord__X
+Coord__Y
+Coord__Z
+number of points = 2061134
+52644996 84845996 1.6116630724029308
+number of pixels = 8247252
+width in pixels = 3646
+height in pixels = 2262
+mean pixel value = 571467.8801381681
+cropping masks
+cropping masks
+Unet
+resnet34
+cuda
+epoch: 0 training loss:  0.703   test loss:  0.662
+epoch: 1 training loss:  0.648   test loss:  0.619
+epoch: 2 training loss:  0.621   test loss:  0.582
+epoch: 3 training loss:  0.600   test loss:  0.539
+epoch: 4 training loss:  0.600   test loss:  0.502
+epoch: 5 training loss:  0.547   test loss:  0.493
+epoch: 6 training loss:  0.506   test loss:  0.446
