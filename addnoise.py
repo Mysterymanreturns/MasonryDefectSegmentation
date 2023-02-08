@@ -11,7 +11,7 @@
 #image = image with added perlin noise
 #img = perlin noise added to image
 
-def addperlin1(image,variability):
+def addperlin1(image, variability):
     
     import numpy as np
     import random

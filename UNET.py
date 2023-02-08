@@ -21,7 +21,7 @@
 # recall = recall score for test image
 # nepochsf = number of epochs used for training (note: number is appended to name of trained network)
 
-def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
+def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs, network, encoder, pretrain, dim,transparams, transparamsv):
 
     import os
     import sys
@@ -31,6 +31,7 @@ def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs
     project="test1",
     name=runname,
     config={
+    "Run description": desc,
     "proportion of wall 1 data": wall1prop,
     "proportion of wall 2 data": wall2prop,
     "proportion of synthetic data": synthprop,
@@ -217,6 +218,46 @@ def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs
         classes=1,                      # model output channels (number of classes in your dataset)
     ) 
     net.to("cuda")
+
+
+    class SoftDiceLoss(nn.Module):
+        def __init__(self, weight=None, size_average=True):
+            super(SoftDiceLoss, self).__init__()
+
+        def forward(self, logits, targets):
+            smooth = 1
+            num = targets.size(0)
+            """
+            I am assuming the model does not have sigmoid layer in the end. if that is the case, change torch.sigmoid(logits) to simply logits
+            """
+            probs = torch.sigmoid(logits)
+
+            m1 = probs.view(num, -1)
+            m2 = targets.view(num, -1)
+
+            #new section
+
+                   # m2 = m2/255
+                 #   m2 = m2>0.1
+                # m2 = m2.astype(int)
+                 #   m1  = m1>125
+            #m1 = m1.astype(int)
+
+            #section end
+
+
+
+
+
+            intersection = (m1 * m2)
+
+            score = 2. * (intersection.sum(1) + smooth) / (m1.sum(1) + m2.sum(1) + smooth)
+            score = 1 - score.sum() / num
+            return score
+
+    
+
+
     def train():
 
 
@@ -251,10 +292,10 @@ def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs
 
        # loss_fn = nn.CrossEntropyLoss()
         #optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.01)
-        optimizer = torch.optim.Adam(net.parameters(), lr=0.001, eps=1e-08,  weight_decay=0.00001)
+        optimizer = torch.optim.Adam(net.parameters(), lr=0.0004, eps=1e-08,  weight_decay=0.00001)
 
 
-        criterion = nn.BCEWithLogitsLoss(pos_weight=3*torch.ones([1])).to("cuda")
+        criterion = SoftDiceLoss().to("cuda") #nn.BCEWithLogitsLoss(pos_weight=3*torch.ones([1])).to("cuda")
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          # number of examples predicted correctly (for accuracy)
             total = 0            # number of examples
@@ -320,38 +361,46 @@ def unet(runname,synthprop,wall1prop,wall2prop, test, inno, batch, path, nepochs
         torch.save({"state_dict": net.state_dict(), "stats": statsrec}, saveplace)
 
         if test == 1:    
-                iou_score2, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test2.tiff","/testmask2.tiff", savetag2)
+                iou_score2,iou_score2fit, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test2.tiff","/testmask2.tiff", savetag2)
                # iou_scoresynthetic, precision,recall = UNETrun(inno, savestate, "depth", network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.tiff", "default")
-                iou_scoresynthetic, precision, recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.png", savetagsynthetic)
+                iou_scoresynthetic,iou_scorefitsynthetic, precision, recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/testsynth.tiff","/testmasksynth.png", savetagsynthetic)
 
-                iou_score, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test.tiff","/testmask.tiff", savetag)
+                iou_score,iou_scorefit, precision,recall = UNETrun(inno, savestate, type1, network, path, encoder, dim, "/test.tiff","/testmask.tiff", savetag)
                 
                 testimg = Image.open(path+"test.tiff")
                 testmask = Image.open(path+"test.tiff")
                 outputimg = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetag))
+                outputimgfit = Image.open(path+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag))
           
                 wandb.log({"testimage wall1": wandb.Image(np.array(testimg))})
                 wandb.log({"testmask wall1": wandb.Image(np.array(testmask))})
                 wandb.log({"outputimage wall1": wandb.Image(np.array(outputimg))})
+                wandb.log({"outputimage wall1 blockfit": wandb.Image(np.array(outputimgfit))})
                 
                 testimg2 = Image.open(path+"test2.tiff")
                 testmask2 = Image.open(path+"testmask2.tiff")
                 outputimg2 = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetag2))
+                outputimg2fit = Image.open(path+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag2))
+
 
                 wandb.log({"testimage wall2": wandb.Image(np.array(testimg2))})
                 wandb.log({"testmask wall2": wandb.Image(np.array(testmask2))})
                 wandb.log({"outputimage wall2": wandb.Image(np.array(outputimg2))})
+                wandb.log({"outputimage wall2 blockfit": wandb.Image(np.array(outputimg2fit))})
                 
                 testimgsynth = Image.open(path+"testsynth.tiff")
                 testmasksynth = Image.open(path+"testmasksynth.png")
                 outputimgsynth = Image.open(path+'/results/picout{}{}{}{}.tiff'.format(type1,network,encoder,savetagsynthetic))
+                outputimgsynthfit = Image.open(path+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetagsynthetic))
 
                 wandb.log({"testimage syntheticwall": wandb.Image(np.array(testimgsynth))})
                 wandb.log({"testmask syntheticwall": wandb.Image(np.array(testmasksynth))})
-                wandb.log({"outputimage syntheticwall": wandb.Image(np.array(outputimgsynth))})                
+                wandb.log({"outputimage syntheticwall": wandb.Image(np.array(outputimgsynth))})  
+                wandb.log({"outputimage syntheticwall blockfit": wandb.Image(np.array(outputimgsynthfit))})              
 
                 
-                wandb.log({'test IOU wall1': iou_score, 'test IOU wall 2': iou_score2, 'test IOU synthetic wall': iou_scoresynthetic})
+                wandb.log({'test IOU wall 1': iou_score, 'test IOU wall 2': iou_score2, 'test IOU synthetic wall': iou_scoresynthetic})
+                wandb.log({'test IOU wall 1 blockfit': iou_scorefit, 'test IOU wall 2 blockfit': iou_score2fit, 'test IOU synthetic wall blockfit': iou_scorefitsynthetic})
         else:
             iou_score, iou_score2, iou_scoresynthetic, precision, recall = [0,0,0]
             

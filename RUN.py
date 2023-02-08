@@ -26,6 +26,7 @@
 def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, testmask, savetag):
 
     import numpy as np
+    from Blockfit import blockfit
     import torch
     import torchvision
     from torch import nn, optim
@@ -456,18 +457,20 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
     prediction = prediction.astype(int)
     
     
-    fig, ax = plt.subplots(1,2,figsize=(10, 20))
-    ax1 = plt.subplot(1,2,1)
-    plt.imshow(picout)
-    ax2 = plt.subplot(1,2,2)
-    plt.imshow(prediction)
-    ax1.title.set_text('output')
-    ax2.title.set_text('output binary')
+    # fig, ax = plt.subplots(1,2,figsize=(10, 20))
+    # ax1 = plt.subplot(1,2,1)
+    # plt.imshow(picout)
+    # ax2 = plt.subplot(1,2,2)
+    # plt.imshow(prediction)
+    # ax1.title.set_text('output')
+    # ax2.title.set_text('output binary')
     
     
     
     im = Image.open(test+testmask)
-    target = np.array(im)
+    target = np.array(im)/255
+    target = target>0.1
+    target = target.astype(int)
 
     
     intersection = np.logical_and(target, prediction)
@@ -482,7 +485,17 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
     FN = np.sum(targetbin)-np.sum(intersection)
     precision = TP/(TP+FP)
     Recall = TP/(TP+FN)
+
+
+    picoutfitnp = blockfit((picoutnp * 255).astype(np.uint8))
+    predictionfit = picoutfitnp.astype(int) 
+    picoutfit = Image.fromarray((picoutfitnp * 255).astype(np.uint8))
+    picoutfit.save(test+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag))
+    intersectionfit = np.logical_and(target, predictionfit)
+    unionfit = np.logical_or(target, predictionfit)
+    iou_scorefit = np.sum(intersectionfit) / np.sum(unionfit)
+
     print("IOU = {}".format(iou_score))
     print("precision = {}".format(precision))
     print("recall = {}".format(Recall))
-    return iou_score,precision,Recall
+    return iou_score,iou_scorefit,precision,Recall
