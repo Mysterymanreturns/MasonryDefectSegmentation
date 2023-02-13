@@ -26,10 +26,17 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
     import os
     import sys
     from RUN import UNETrun
+    
+    
+    from torch.utils.tensorboard import SummaryWriter
+
+    writer = SummaryWriter("torchlogs/")
+    
     import wandb
     run = wandb.init(
     project="test1",
     name=runname,
+    sync_tensorboard=True,
     config={
     "Run description": desc,
     "proportion of wall 1 data": wall1prop,
@@ -128,7 +135,10 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
                     permissionerr = 1
                     print("permision error!!! retrying...")
                     time.sleep(1)
-            (x-x.mean())/np.std(x)    
+            normalisationparam = 4        
+            x = ((x-x.mean())/(normalisationparam*np.std(x)))+0.5
+            x[x<0] = 0
+            x[x>1] = 1
             maxinput = x.max()
             x = x/maxinput
             if y.max() != 0:
@@ -216,7 +226,10 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
         encoder_weights=pretrain,     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,                      # model output channels (number of classes in your dataset)
-    ) 
+    )
+    
+    writer.add_graph(net(), input_to_model=None)
+    writer.close()
     net.to("cuda")
 
 

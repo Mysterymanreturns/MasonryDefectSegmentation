@@ -65,7 +65,22 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
    #     pic = Image.open(test).convert('RGB')
     
     pic = Image.open(test+testimage)
-
+    
+    
+    def normaliseimg(normalisationparam, picnormnp):
+            
+        picnormnp = ((picnormnp-picnormnp.mean())/(normalisationparam*np.std(picnormnp)))+0.5
+        picnormnp[picnormnp<0] = 0
+        picnormnp[picnormnp>1] = 1
+        
+        return picnormnp
+    normalisationparam = 4    
+    picnormnp = np.array(pic)
+    picnormnp = normaliseimg(normalisationparam,picnormnp)
+    pic = Image.fromarray(picnormnp)
+    
+    
+    
     pic1 = pic.copy()
     pic2 = pic.copy()
     pic3 = pic.copy()
@@ -169,7 +184,7 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
                   imagepre = np.array(region)
 
                   image = imagepre#.astype(np.uint8)
-
+                  image = normaliseimg(normalisationparam,image)
                   transformed = transform1(image=image)
                   image = transformed["image"]
 
@@ -292,7 +307,7 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
                   imagepre = np.array(region)
 
                   image = imagepre#.astype(np.uint8)
-
+                  image = normaliseimg(normalisationparam,image)
                   transformed = transform1(image=image)
                   image = transformed["image"]
 
@@ -401,7 +416,7 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
                   imagepre = np.array(region)
 
                   image = imagepre#.astype(np.uint8)
-
+                  image = normaliseimg(normalisationparam,image)
                   transformed = transform1(image=image)
                   image = transformed["image"]
 
