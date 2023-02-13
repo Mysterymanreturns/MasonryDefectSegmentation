@@ -227,9 +227,18 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
         in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,                      # model output channels (number of classes in your dataset)
     )
-    
-    writer.add_graph(net(), input_to_model=None)
+    #try:
+        #tb = SummaryWriter()
+
+    images, labels = next(iter(dataloader_training))
+    grid = torchvision.utils.make_grid(images)
+    writer.add_image("images", grid)
+    modelforgraph = net(images) 
+      #  tb.add_graph(model, images)
+    writer.add_graph(modelforgraph, images)
     writer.close()
+    #else:
+    #    continue
     net.to("cuda")
 
 
