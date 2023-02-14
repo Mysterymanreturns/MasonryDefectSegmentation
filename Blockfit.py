@@ -29,16 +29,16 @@ def blockfit(data):
     startx = hjointloc*0
     endx = hjointloc*0
     for X in range(0,len(hjointloc)):
-        print('x,a')
-        print(hjointloc[X])
-        print(a)
+       # print('x,a')
+       # print(hjointloc[X])
+       # print(a)
         
         if hjointloc[X] == True and a == False:
             endx[X] = 1
-            print("end")
+        #    print("end")
         if hjointloc[X] == False and a == True:
             startx[X] = 1
-            print("start")
+       #     print("start")
         a = hjointloc[X]
     endx[0]=0
     endx[-1]=1

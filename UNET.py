@@ -26,50 +26,10 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
     import os
     import sys
     from RUN import UNETrun
-    
-    
-    from torch.utils.tensorboard import SummaryWriter
-
-    writer = SummaryWriter("torchlogs/")
-    
     import wandb
-    run = wandb.init(
-    project="test1",
-    name=runname,
-    sync_tensorboard=True,
-    config={
-    "Run description": desc,
-    "proportion of wall 1 data": wall1prop,
-    "proportion of wall 2 data": wall2prop,
-    "proportion of synthetic data": synthprop,
-    "number of channels": inno,
-    "network architecture": network,  
-    "encoder": encoder,
-    "pretrain": pretrain,
-    "image dimension (square)": dim,    
-    })
-    type1 = "depth"
-    savetag = "wall1"
-    savetag2 = "wall2"
-    savetagsynthetic = "syntheticwall"
-
-  #  path1 = 'C:/Users/eejmws/OneDrive - University of Leeds/Pytorch/'
-  #  path2 = 'C:/Users/jackm/OneDrive - University of Leeds/Pytorch/'
-
-  #  isdir1 = os.path.isdir(path1) 
-  #  isdir2 = os.path.isdir(path2) 
-
-  #  if isdir1 == True:
-  #      os.chdir(path1)
-  #  elif isdir2 == True:
-  #      os.chdir(path2)
-  #  else:
-  #      print("directory not found")
-    results_path = path+"/results"
-    try:
-        os.makedirs(results_path)
-    except OSError:
-        pass    
+    import datetime
+    from torch.utils.tensorboard import SummaryWriter
+    
     import numpy as np
     import torch
     import segmentation_models_pytorch as smp
@@ -92,6 +52,50 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
     import pathlib
     import time
     from albumentations.pytorch import ToTensorV2
+
+    tensorboard_log_dir1 = os.path.join("tensorboardlogs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    wandb.tensorboard.patch(root_logdir=tensorboard_log_dir1, pytorch=True)
+    run = wandb.init(
+    project="test1",
+   # sync_tensorboard=True,
+    name=runname,
+    config={
+    "Run description": desc,
+    "proportion of wall 1 data": wall1prop,
+    "proportion of wall 2 data": wall2prop,
+    "proportion of synthetic data": synthprop,
+    "number of channels": inno,
+    "network architecture": network,  
+    "encoder": encoder,
+    "pretrain": pretrain,
+    "image dimension (square)": dim, 
+    #tensorboard_log_dir = tensorboard_log_dir1
+    })
+   # wandb.config.tensorboard_log_dir = tensorboard_log_dir1
+    type1 = "depth"
+    savetag = "wall1"
+    savetag2 = "wall2"
+    savetagsynthetic = "syntheticwall"
+    writer = SummaryWriter(tensorboard_log_dir1)#wandb.config.tensorboard_log_dir)
+    writer.add_scalar("test1", dim)
+  #  path1 = 'C:/Users/eejmws/OneDrive - University of Leeds/Pytorch/'
+  #  path2 = 'C:/Users/jackm/OneDrive - University of Leeds/Pytorch/'
+
+  #  isdir1 = os.path.isdir(path1) 
+  #  isdir2 = os.path.isdir(path2) 
+
+  #  if isdir1 == True:
+  #      os.chdir(path1)
+  #  elif isdir2 == True:
+  #      os.chdir(path2)
+  #  else:
+  #      print("directory not found")
+    results_path = path+"/results"
+    try:
+        os.makedirs(results_path)
+    except OSError:
+        pass    
+    
     DATA_DIR = './test2/'
     # First check devices available (gpus or cpu), 'cuda' stands for gpus
     if torch.cuda.is_available(): device = torch.device('cuda')
@@ -227,18 +231,22 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
         in_channels=inno,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,                      # model output channels (number of classes in your dataset)
     )
-    try:
+   # try:
         #tb = SummaryWriter()
 
-        images, labels = next(iter(dataloader_training))
-        grid = torchvision.utils.make_grid(images)
-        writer.add_image("images", grid)
-        modelforgraph = net#()#images) 
-        #  tb.add_graph(model, images)
-        writer.add_graph(modelforgraph, images)
-        writer.close()
-    except:
-        print("tensorboard error")
+    imagestensorboard, labelstensorboard = next(iter(dataloader_training))
+    grid = torchvision.utils.make_grid(imagestensorboard)
+    writer.add_image("imagestensorboard", grid)
+    modelforgraph = net#()#images) 
+    #  tb.add_graph(model, images)
+    writer.add_graph(modelforgraph, imagestensorboard)
+    
+       # tensorboard --logdir logs
+    # except:
+    #     print("tensorboard error")
+    #     writer.close()
+    
+    
     net.to("cuda")
 
 
@@ -249,9 +257,6 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
         def forward(self, logits, targets):
             smooth = 1
             num = targets.size(0)
-            """
-            I am assuming the model does not have sigmoid layer in the end. if that is the case, change torch.sigmoid(logits) to simply logits
-            """
             probs = torch.sigmoid(logits)
 
             m1 = probs.view(num, -1)
@@ -431,7 +436,11 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
         
     #if __name__ == '__main__':
     iou_score, iou_score2, iou_scoresynthetic, precision, recall,nepochsf = train()
+    writer.flush()
+    writer.close()
     run.finish()
+    wandb.tensorboard.unpatch()
+    wandb.finish()
     torch.cuda.empty_cache()
  #   torch.save({"state_dict" : net.state_dict()}, results_path)
     return iou_score,precision,recall, nepochsf, iou_score2, iou_scoresynthetic

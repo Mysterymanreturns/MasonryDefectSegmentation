@@ -75,11 +75,9 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
         
         return picnormnp
     normalisationparam = 4    
-    picnormnp = np.array(pic)
-    picnormnp = normaliseimg(normalisationparam,picnormnp)
-    pic = Image.fromarray(picnormnp)
-    
-    
+   # picnormnp = np.array(pic)
+   # picnormnp = normaliseimg(normalisationparam,picnormnp)
+   # pic = Image.fromarray(picnormnp)
     
     pic1 = pic.copy()
     pic2 = pic.copy()
