@@ -45,21 +45,24 @@ def blockfit(data):
 
     startindex = startx.nonzero()
     endindex = endx.nonzero()
-
+    if startindex[0] > endindex[0]:
+        startindex = torch.cat((torch.zeros(1).unsqueeze(0), startindex))
+    if startindex[-1] > endindex[-1]:
+        endindex = torch.cat((endindex, (startx.size()[0]-1)*torch.ones(1).unsqueeze(0)))
     x2 = hjoints
     widthadd = 1
     widthcheck = widthadd*2 +1
     for start, end in zip(startindex,endindex):
-        vjoints = 0*torch.sum(x[0][start:end,:],dim =0)
+        vjoints = 0*torch.sum(x[0][int(start.item()):int(end.item()),:],dim =0)
         for n in range(0, widthcheck):
-            vjoints[(widthadd):(-widthadd)] += torch.sum(x[0][start:end,(0+n):x[0].shape[1]-widthcheck+n+1],dim =0)/(widthcheck*(end-start))
+            vjoints[(widthadd):(-widthadd)] += torch.sum(x[0][int(start.item()):int(end.item()),(0+n):x[0].shape[1]-widthcheck+n+1],dim =0)/(widthcheck*(end.item()-start.item()))
 
         THRESHOLD = min(torch.mean(vjoints)+torch.std(vjoints),0.99)
-        vjoints = vjoints>THRESHOLD
+        vjoints = vjoints> 0.5 #THRESHOLD
         vjointloc = vjoints
         vjoints = torch.unsqueeze(vjoints,0)
-        vjoints = vjoints*torch.ones(x[0][start:end,:].shape)
-        x2[start:end,:] = vjoints + hjoints[start:end,:]
+        vjoints = vjoints*torch.ones(x[0][int(start.item()):int(end.item()),:].shape)
+        x2[int(start.item()):int(end.item()),:] = vjoints + hjoints[int(start.item()):int(end.item()),:]#
 
     fit = np.array(x2)
 
