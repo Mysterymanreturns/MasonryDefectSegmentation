@@ -45,10 +45,13 @@ def blockfit(data):
 
     startindex = startx.nonzero()
     endindex = endx.nonzero()
-    if startindex[0] > endindex[0]:
-        startindex = torch.cat((torch.zeros(1).unsqueeze(0), startindex))
-    if startindex[-1] > endindex[-1]:
-        endindex = torch.cat((endindex, (startx.size()[0]-1)*torch.ones(1).unsqueeze(0)))
+    try:
+        if startindex[0] > endindex[0]:
+            startindex = torch.cat((torch.zeros(1).unsqueeze(0), startindex))
+        if startindex[-1] > endindex[-1]:
+            endindex = torch.cat((endindex, (startx.size()[0]-1)*torch.ones(1).unsqueeze(0)))
+    except:
+        print('joints not found')
     x2 = hjoints
     widthadd = 1
     widthcheck = widthadd*2 +1
