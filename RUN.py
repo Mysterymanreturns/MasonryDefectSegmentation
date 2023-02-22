@@ -499,14 +499,17 @@ def UNETrun(inno, savestate, type1, network, test, encoder, dim, testimage, test
     precision = TP/(TP+FP)
     Recall = TP/(TP+FN)
 
-
-    picoutfitnp = blockfit((picoutnp * 255).astype(np.uint8))
-    predictionfit = picoutfitnp.astype(int) 
-    picoutfit = Image.fromarray((picoutfitnp * 255).astype(np.uint8))
-    picoutfit.save(test+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag))
-    intersectionfit = np.logical_and(target, predictionfit)
-    unionfit = np.logical_or(target, predictionfit)
-    iou_scorefit = np.sum(intersectionfit) / np.sum(unionfit)
+    try: 
+        picoutfitnp = blockfit((picoutnp * 255).astype(np.uint8))
+        predictionfit = picoutfitnp.astype(int) 
+        picoutfit = Image.fromarray((picoutfitnp * 255).astype(np.uint8))
+        picoutfit.save(test+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag))
+        intersectionfit = np.logical_and(target, predictionfit)
+        unionfit = np.logical_or(target, predictionfit)
+        iou_scorefit = np.sum(intersectionfit) / np.sum(unionfit)
+    except:
+        iou_scorefit=0
+        picout.save(test+'/results/picout{}{}{}{}fit.tiff'.format(type1,network,encoder,savetag))
 
     print("IOU = {}".format(iou_score))
     print("precision = {}".format(precision))

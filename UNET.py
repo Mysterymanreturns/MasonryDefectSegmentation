@@ -377,7 +377,7 @@ def unet(runname,desc, synthprop,wall1prop,wall2prop, test, inno, batch, path, n
             #print(statsrec.type())
             statsrec[:,epoch] = (ltrn, ltst)
             
-            if epoch >= 30:
+            if epoch >= 300:
                 if 0.80*ltst >= ltrn:
                    break
             
