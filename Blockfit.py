@@ -61,7 +61,7 @@ def blockfit(data):
             vjoints[(widthadd):(-widthadd)] += torch.sum(x[0][int(start.item()):int(end.item()),(0+n):x[0].shape[1]-widthcheck+n+1],dim =0)/(widthcheck*(end.item()-start.item()))
 
         THRESHOLD = min(torch.mean(vjoints)+torch.std(vjoints),0.99)
-        vjoints = vjoints> 0.5 #THRESHOLD
+        vjoints = vjoints> THRESHOLD
         vjointloc = vjoints
         vjoints = torch.unsqueeze(vjoints,0)
         vjoints = vjoints*torch.ones(x[0][int(start.item()):int(end.item()),:].shape)

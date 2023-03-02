@@ -41,7 +41,7 @@ def raster(fileloc,saveloc,mask = 0,res = 1, dim = None):
         print(np.unique(las.classification)) 
         for dimension in las.point_format.dimensions:
             print(dimension.name)
-        points = np.vstack((las.X, las.Y, las.Z)).transpose()    
+        points = np.vstack((las.x, las.y, las.z)).transpose()    
         nop = len(points[:,0])
         print('number of points = {}'.format(nop))
         xmin = np.argmin(points[:,0])
