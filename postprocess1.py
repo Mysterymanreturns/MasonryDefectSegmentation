@@ -1,18 +1,24 @@
-def postprocess(blocksave,spallsave,imsave):
+def postprocess(blocksave,jointsave,spallsave,imsave):
 
     import numpy as np
     from PIL import Image
     import matplotlib.pyplot as plt
     import cv2 as cv
     import scipy.linalg
+    from skimage.morphology import skeletonize
 
     pic = Image.open(blocksave)
     picnp = np.array(pic)
     picspall = Image.open(spallsave)
+    picjoint = Image.open(jointsave)
     picnpspall = np.array(picspall)
+    picnpjoint = np.array(picjoint)
     spallmask = picnpspall<150
+    jointmask = picnpjoint<150
+    jointblockmask = picnp>150
     picoriginal = Image.open(imsave)
     picorignp = np.array(picoriginal)
+    picnp = (255*skeletonize(picnp/255)).astype('uint8')
     labels, markedim = cv.connectedComponents(255-picnp)
     labeledimage = picorignp*0
     print(labels)
@@ -21,7 +27,7 @@ def postprocess(blocksave,spallsave,imsave):
             blockextract = (markedim == blockno).astype(np.uint8)
             block = blockextract*picorignp
             labelst = np.nonzero(block)
-            blockmask = block*spallmask
+            blockmask = block*spallmask+block*jointmask+block*jointblockmask
             blockcrop = blockmask[labelst[0].min():labelst[0].max(),labelst[1].min():labelst[1].max()]
 
 
